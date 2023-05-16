@@ -7,23 +7,72 @@
     <input type="text" placeholder="Votre message" v-model="message">
     <button @click="changerClasse">Changer état</button>
     </p>
+
+    <p v-if="todos">{{ todos.length }}</p>
+    
+    <carte-slots  
+      v-for="(stagiaire,index) in stagiaires" 
+      :key="index" 
+      :fermable="fromThemanis(stagiaire)"
+      @suppression="supprimer($event)"
+    >
+      <template #titre>
+
+        {{ stagiaire.nom }}
+      </template>
+      {{ stagiaire.employeur}}
+      <template v-if="fromThemanis(stagiaire)" #pied="vientDuPied">
+        Formateur {{ vientDuPied.nom }}
+      </template>
+    </carte-slots>
 </template>
 
 <script>
+import CarteSlots from "@/components/CarteAvecSlots.vue"
+import axios from 'axios'
+
 export default {
-  // définir une variale interne à la Vue (message)
+  components: {
+    CarteSlots
+  },
   data(){
     // Variables internes de la vue (état applicatif limité à la vue)
     return {
+      // définir une variale interne à la Vue (message)
       message: null,
-      nomClasse: 'on'
+      nomClasse: 'on',
+      stagiaires: [
+        { 
+          nom: 'Matéo',
+          employeur:'CHU 31'
+        },
+        { 
+          nom: 'Frédéric',
+          employeur:'CHU 31'
+        },
+        { 
+          nom: 'Julien',
+          employeur:'INRAE'
+        },
+        { 
+          nom: 'Eric',
+          employeur:'Thémanis'
+        },
+      ],
+      todos: null,
     }
   },
-
   computed: {
-    //PRopriétés calculées
+    //Propriétés calculées
     messageEnMajuscules(){
       return this.message.toUpperCase();
+    },
+    
+  },
+  watch: {
+    // Watchers de l'instance
+    message(val){
+      console.log(val);
     }
   },
   methods:{
@@ -38,8 +87,25 @@ export default {
       }
 
       // this.nomClasse = ( this.nomClasse == 'on' ) ? 'off' : 'on';
+    },
+    supprimer(index){
+      this.stagiaires.splice(index,1);
+    },
+    fromThemanis(person) {
+      const result = !! person.employeur.match(/^th[eé]manis$/i) 
+      console.log(person, result);
+      return result;
     }
+  },
+  created(){
+    axios
+      .get('https://my-json-server.typicode.com/vuejstrainings/todosListDb/todos')
+      .then( res => {
+        this.todos = res.data;
+      })
+      .catch( err => console.log(err) )
   }
+
 }
 
 </script>
